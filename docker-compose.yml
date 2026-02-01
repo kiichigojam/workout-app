@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: habitdb
+      POSTGRES_USER: habituser
+      POSTGRES_PASSWORD: NewPassword123!
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/habitdb
+      SPRING_DATASOURCE_USERNAME: habituser
+      SPRING_DATASOURCE_PASSWORD: NewPassword123!
+      APP_JWT_SECRET: LONG_RANDOM_PASSWORD_LONG_RANDOM_PASSWORD_LONG_RANDOM_PASSWORD
+    ports:
+      - "5433:5432"
+    volumes:
+      - habit_pg:/var/lib/postgresql/data
+volumes:
+  habit_pg:

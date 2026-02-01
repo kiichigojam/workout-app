@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: habit-api
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/habitdb}
+    username: ${SPRING_DATASOURCE_USERNAME:habituser}
+    password: ${SPRING_DATASOURCE_PASSWORD:NewPassword123!}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+
+server:
+  port: 8800
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:LONG_RANDOM_PASSWORD_LONG_RANDOM_PASSWORD_LONG_RANDOM_PASSWORD}
+    expirationMinutes: ${APP_JWT_EXPIRATION_MINUTES:10000}
