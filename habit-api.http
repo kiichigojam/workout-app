@@ -1,0 +1,90 @@
+@baseUrl = http://localhost:8800
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwNTUxODFlYy03NDY0LTQ1YWEtYTQ1OS1kN2Y4ZTY2ZDQzNjkiLCJpYXQiOjE3NzM1MzEzODYsImV4cCI6MTc3NDEzMTM4Nn0.CNWZtep1hrLsFq7HeF9zqIMe3yIMdYdFCiVIH9faN3k
+@habitId = 31355931-3d06-4319-b31d-b311fe3b0bba
+
+### Health check
+GET {{baseUrl}}/health
+
+### Signup
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "demo@example.com",
+  "password": "password123",
+  "name": "Demo User"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@example.com",
+  "password": "password123"
+}
+
+### Get current user
+GET {{baseUrl}}/users/me
+Authorization: Bearer {{token}}
+
+### Delete current user
+DELETE {{baseUrl}}/users/me
+Authorization: Bearer {{token}}
+
+### Create habit
+POST {{baseUrl}}/habits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Workout",
+  "notes": "Upper body on Mondays"
+}
+
+### List habits
+GET {{baseUrl}}/habits
+Authorization: Bearer {{token}}
+
+### Get habit
+GET {{baseUrl}}/habits/{{habitId}}
+Authorization: Bearer {{token}}
+
+### Update habit
+PATCH {{baseUrl}}/habits/{{habitId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Workout 5x/week",
+  "notes": "Upper/lower split",
+  "isActive": true
+}
+
+### Delete habit
+DELETE {{baseUrl}}/habits/{{habitId}}
+Authorization: Bearer {{token}}
+
+### Create checkin with explicit date
+POST {{baseUrl}}/habits/{{habitId}}/checkins
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "checkinDate": "2026-03-14"
+}
+
+### Create checkin for today
+POST {{baseUrl}}/habits/{{habitId}}/checkins
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### List checkins
+GET {{baseUrl}}/habits/{{habitId}}/checkins
+Authorization: Bearer {{token}}
+
+### Delete checkin by date
+DELETE {{baseUrl}}/habits/{{habitId}}/checkins/2026-03-14
+Authorization: Bearer {{token}}

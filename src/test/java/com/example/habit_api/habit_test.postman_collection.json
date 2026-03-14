@@ -1,0 +1,325 @@
+{
+  "info": {
+    "name": "Habit API",
+    "_postman_id": "4c9d3d8e-1d6a-4c8d-9d5e-8a8f1f2b3c4d",
+    "description": "Postman collection for the Habit API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8800"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "habitId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Signup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"demo@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Demo User\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "signup"]
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.token) {",
+              "  pm.collectionVariables.set('token', data.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"demo@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Get Current User",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "me"]
+        }
+      }
+    },
+    {
+      "name": "Delete Current User",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "me"]
+        }
+      }
+    },
+    {
+      "name": "Create Habit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.id) {",
+              "  pm.collectionVariables.set('habitId', data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Workout\",\n  \"notes\": \"Upper body on Mondays\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/habits",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits"]
+        }
+      }
+    },
+    {
+      "name": "List Habits",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/habits",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits"]
+        }
+      }
+    },
+    {
+      "name": "Get Habit",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/habits/{{habitId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits", "{{habitId}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Habit",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Workout 5x/week\",\n  \"notes\": \"Upper/lower split\",\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/habits/{{habitId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits", "{{habitId}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete Habit",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/habits/{{habitId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits", "{{habitId}}"]
+        }
+      }
+    },
+    {
+      "name": "Create Checkin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"checkinDate\": \"2026-03-14\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/habits/{{habitId}}/checkins",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits", "{{habitId}}", "checkins"]
+        }
+      }
+    },
+    {
+      "name": "Create Checkin Today",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/habits/{{habitId}}/checkins",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits", "{{habitId}}", "checkins"]
+        }
+      }
+    },
+    {
+      "name": "List Checkins",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/habits/{{habitId}}/checkins",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits", "{{habitId}}", "checkins"]
+        }
+      }
+    },
+    {
+      "name": "Delete Checkin By Date",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/habits/{{habitId}}/checkins/2026-03-14",
+          "host": ["{{baseUrl}}"],
+          "path": ["habits", "{{habitId}}", "checkins", "2026-03-14"]
+        }
+      }
+    }
+  ]
+}
