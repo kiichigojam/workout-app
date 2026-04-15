@@ -26,3 +26,9 @@ app:
   jwt:
     secret: ${APP_JWT_SECRET:LONG_RANDOM_PASSWORD_LONG_RANDOM_PASSWORD_LONG_RANDOM_PASSWORD}
     expirationMinutes: ${APP_JWT_EXPIRATION_MINUTES:10000}
+
+nutrition:
+  usda:
+    baseUrl: ${USDA_BASE_URL:https://api.nal.usda.gov/fdc/v1}
+    apiKey: ${USDA_API_KEY:tbd0HkQtszqLFSdzfdnLu9SLbNeRR7mdxonabKBK}
+    searchCacheMinutes: ${USDA_SEARCH_CACHE_MINUTES:720}

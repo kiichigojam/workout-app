@@ -1,0 +1,238 @@
+.app-shell {
+  display: grid;
+  gap: 22px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 22px;
+  align-items: end;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+}
+
+.lede {
+  max-width: 56ch;
+  margin: 14px 0 0;
+  color: var(--text-soft);
+}
+
+.hero-metrics {
+  display: grid;
+  gap: 14px;
+}
+
+.metric-card,
+.panel,
+.card {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.metric-card {
+  padding: 18px 20px;
+}
+
+.metric-card span,
+.meta-row {
+  color: var(--text-soft);
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.05rem;
+  color: var(--text-strong);
+}
+
+.dashboard {
+  display: grid;
+  gap: 20px;
+}
+
+.panel {
+  padding: 22px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel h2,
+.panel h3,
+.hero h1 {
+  margin: 0;
+}
+
+.form-grid,
+.list-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.form-card,
+.list-card,
+.console-card {
+  padding: 18px;
+  background: var(--panel-strong);
+}
+
+.inline-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+}
+
+.nutrition-form .wide {
+  grid-column: span 2;
+}
+
+.date-control {
+  min-width: 180px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+input {
+  width: 100%;
+  border: 1px solid rgba(36, 60, 74, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--text-strong);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+input:focus {
+  outline: 2px solid rgba(28, 130, 151, 0.18);
+  border-color: var(--accent);
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  cursor: pointer;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.ghost-button {
+  color: var(--text-strong);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.danger-button {
+  background: linear-gradient(135deg, #dc6b50, #b74439);
+}
+
+.list-card p,
+.meta-row {
+  margin: 10px 0 0;
+}
+
+.pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  background: rgba(26, 44, 54, 0.06);
+}
+
+.ok {
+  color: var(--accent-strong);
+}
+
+.danger {
+  color: #b74439;
+}
+
+.empty-state {
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px dashed var(--border);
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+pre {
+  margin: 0;
+  min-height: 96px;
+  overflow: auto;
+  white-space: pre-wrap;
+  background: #1b2327;
+  color: #edf5f7;
+  border-radius: 18px;
+  padding: 16px;
+  font-family: 'Cascadia Code', Consolas, monospace;
+}
+
+.entry-controls {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.log-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 920px) {
+  .hero,
+  .form-grid,
+  .inline-form {
+    grid-template-columns: 1fr;
+  }
+
+  .nutrition-form .wide {
+    grid-column: span 1;
+  }
+
+  .log-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,6 +1,8 @@
 @baseUrl = http://localhost:8800
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwNTUxODFlYy03NDY0LTQ1YWEtYTQ1OS1kN2Y4ZTY2ZDQzNjkiLCJpYXQiOjE3NzM1MzEzODYsImV4cCI6MTc3NDEzMTM4Nn0.CNWZtep1hrLsFq7HeF9zqIMe3yIMdYdFCiVIH9faN3k
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzMTFhMjJhYi04ZDhiLTQ1ZDAtYmE2YS03M2ZmMWMzYzFkYTEiLCJpYXQiOjE3NzYyMjExNzUsImV4cCI6MTc3NjgyMTE3NX0.SvNHng_rEV0l2_dlCW0sT65Ob563JItMftZZaphms0A
 @habitId = 31355931-3d06-4319-b31d-b311fe3b0bba
+@nutritionQuery = banana
+@nutritionEntryId = REPLACE-WITH-NUTRITION-ENTRY-ID
 
 ### Health check
 GET {{baseUrl}}/health
@@ -87,4 +89,76 @@ Authorization: Bearer {{token}}
 
 ### Delete checkin by date
 DELETE {{baseUrl}}/habits/{{habitId}}/checkins/2026-03-14
+Authorization: Bearer {{token}}
+
+### Nutrition search
+GET {{baseUrl}}/nutrition/search?q={{nutritionQuery}}
+Authorization: Bearer {{token}}
+
+### Nutrition search again to hit cache
+GET {{baseUrl}}/nutrition/search?q={{nutritionQuery}}
+Authorization: Bearer {{token}}
+
+### Nutrition search with branded food
+GET {{baseUrl}}/nutrition/search?q=chobani%20greek%20yogurt
+Authorization: Bearer {{token}}
+
+### Nutrition search validation error
+GET {{baseUrl}}/nutrition/search?q=a
+Authorization: Bearer {{token}}
+
+### Create nutrition entry
+POST {{baseUrl}}/nutrition/entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "foodName": "Banana, raw",
+  "brandName": null,
+  "fdcId": 173944,
+  "consumedOn": "2026-04-15",
+  "servings": 1.5,
+  "caloriesPerServing": 89,
+  "servingSize": 100,
+  "servingSizeUnit": "g"
+}
+
+### Create nutrition entry from USDA per-100g result
+POST {{baseUrl}}/nutrition/entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "foodName": "Yogurt, Greek, whole, plain, CHOBANI",
+  "brandName": null,
+  "fdcId": 171309,
+  "consumedOn": "2026-04-15",
+  "servings": 1.50,
+  "caloriesPerServing": 82,
+  "servingSize": 100,
+  "servingSizeUnit": "g"
+}
+
+### Create manual calorie entry
+POST {{baseUrl}}/nutrition/entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "foodName": "Homemade smoothie",
+  "brandName": null,
+  "fdcId": null,
+  "consumedOn": "2026-04-15",
+  "servings": 1,
+  "caloriesPerServing": 450,
+  "servingSize": null,
+  "servingSizeUnit": null
+}
+
+### List nutrition entries for a date
+GET {{baseUrl}}/nutrition/entries?date=2026-04-15
+Authorization: Bearer {{token}}
+
+### Delete nutrition entry
+DELETE {{baseUrl}}/nutrition/entries/{{nutritionEntryId}}
 Authorization: Bearer {{token}}

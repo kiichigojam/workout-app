@@ -17,7 +17,7 @@ public class AuthService {
     public AuthService (UserRepository users, PasswordEncoder encoder, JwtService jwt) {
         this.users = users;
         this.encoder = encoder;
-        this.jwt = jwt;
+        this.jwt = jwt;  
     }
 
     public String signup(SignupRequest req) {
