@@ -1,7 +1,9 @@
 package com.example.habit_api.habits;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.habit_api.security.CurrentUser;
@@ -107,6 +110,36 @@ public class HabitController {
             .map(HabitCheckinResponse::from)
             .toList();
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/checkins/grouped")
+    public List<WorkoutDayResponse> listCheckinsGrouped(@RequestParam(value = "days", defaultValue = "7") int days) {
+        UUID userId = CurrentUser.id();
+        int safeDays = Math.max(1, Math.min(days, 30));
+        LocalDate end = LocalDate.now();
+        LocalDate start = end.minusDays(safeDays - 1L);
+
+        Map<UUID, String> habitTitles = habits.findAllByUserIdOrderByCreatedAtDesc(userId).stream()
+            .collect(java.util.stream.Collectors.toMap(Habit::getId, Habit::getTitle));
+
+        return checkins.findAllByUserIdAndCheckinDateBetweenOrderByCheckinDateDescCreatedAtDesc(userId, start, end)
+            .stream()
+            .map(checkin -> new WorkoutEntryResponse(
+                checkin.getId(),
+                checkin.getHabitId(),
+                habitTitles.getOrDefault(checkin.getHabitId(), "Unknown habit"),
+                checkin.getCheckinDate(),
+                checkin.getCreatedAt()
+            ))
+            .collect(java.util.stream.Collectors.groupingBy(
+                WorkoutEntryResponse::checkinDate,
+                LinkedHashMap::new,
+                java.util.stream.Collectors.toList()
+            ))
+            .entrySet()
+            .stream()
+            .map(entry -> new WorkoutDayResponse(entry.getKey(), entry.getValue().size(), entry.getValue()))
+            .toList();
     }
 
     @PostMapping("/{habitId}/checkins")

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface HabitCheckinRepository extends JpaRepository<HabitCheckin, UUID> {
     List<HabitCheckin> findAllByHabitIdAndUserIdOrderByCheckinDateDesc(UUID habitId, UUID userId);
+    List<HabitCheckin> findAllByUserIdAndCheckinDateBetweenOrderByCheckinDateDescCreatedAtDesc(UUID userId, LocalDate start, LocalDate end);
     boolean existsByHabitIdAndUserIdAndCheckinDate(UUID habitId, UUID userId, LocalDate checkinDate);
     Optional<HabitCheckin> findByHabitIdAndUserIdAndCheckinDate(UUID habitId, UUID userId, LocalDate checkinDate);
 }

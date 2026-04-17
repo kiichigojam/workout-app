@@ -7,8 +7,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class NutritionService {
     private static final TypeReference<List<FoodSearchResultResponse>> SEARCH_RESULTS_TYPE =
         new TypeReference<>() {};
+    private static final String SEARCH_CACHE_VERSION = "v2";
 
     private final NutritionSearchCacheRepository cacheRepository;
     private final NutritionEntryRepository entryRepository;
@@ -41,18 +44,19 @@ public class NutritionService {
         this.searchCacheMinutes = searchCacheMinutes;
     }
 
-    public List<FoodSearchResultResponse> searchFoods(String rawQuery) {
+    public List<FoodSearchResultResponse> searchFoods(String rawQuery, int page, int size) {
         String query = normalizeQuery(rawQuery);
+        String cacheKey = searchCacheKey(query, page, size);
         Instant staleBefore = Instant.now().minus(searchCacheMinutes, ChronoUnit.MINUTES);
 
-        var cached = cacheRepository.findByNormalizedQuery(query);
+        var cached = cacheRepository.findByNormalizedQuery(cacheKey);
         if (cached.isPresent() && !cached.get().getFetchedAt().isBefore(staleBefore)) {
             return readResults(cached.get().getResponseJson());
         }
 
-        List<FoodSearchResultResponse> freshResults = usdaFoodClient.searchFoods(query);
+        List<FoodSearchResultResponse> freshResults = usdaFoodClient.searchFoods(query, page, size);
         NutritionSearchCache cacheEntry = cached.orElseGet(NutritionSearchCache::new);
-        cacheEntry.setNormalizedQuery(query);
+        cacheEntry.setNormalizedQuery(cacheKey);
         cacheEntry.setFetchedAt(Instant.now());
         cacheEntry.setResponseJson(writeResults(freshResults));
         cacheRepository.save(cacheEntry);
@@ -63,14 +67,9 @@ public class NutritionService {
     public NutritionEntryResponse createEntry(UUID userId, CreateNutritionEntryRequest request) {
         NutritionEntry entry = new NutritionEntry();
         entry.setUserId(userId);
-        entry.setFoodName(request.foodName().trim());
-        entry.setBrandName(normalizeOptionalText(request.brandName()));
-        entry.setFdcId(request.fdcId());
-        entry.setConsumedOn(request.consumedOn() != null ? request.consumedOn() : LocalDate.now());
-        entry.setServings(request.servings());
-        entry.setCalories(request.caloriesPerServing().multiply(request.servings()).setScale(2, RoundingMode.HALF_UP));
-        entry.setServingSize(request.servingSize());
-        entry.setServingSizeUnit(normalizeOptionalText(request.servingSizeUnit()));
+        applyEntryValues(entry, request.foodName(), request.brandName(), request.fdcId(),
+            request.consumedOn() != null ? request.consumedOn() : LocalDate.now(),
+            request.servings(), request.caloriesPerServing(), request.servingSize(), request.servingSizeUnit());
         entryRepository.save(entry);
         return NutritionEntryResponse.from(entry);
     }
@@ -89,10 +88,51 @@ public class NutritionService {
         return new NutritionEntriesResponse(date, totalCalories, entries);
     }
 
+    public List<NutritionDayResponse> listEntriesGrouped(UUID userId, int days) {
+        int safeDays = Math.max(1, Math.min(days, 30));
+        LocalDate end = LocalDate.now();
+        LocalDate start = end.minusDays(safeDays - 1L);
+
+        return entryRepository.findAllByUserIdAndConsumedOnBetweenOrderByConsumedOnDescCreatedAtDesc(userId, start, end)
+            .stream()
+            .map(NutritionEntryResponse::from)
+            .collect(Collectors.groupingBy(
+                NutritionEntryResponse::consumedOn,
+                LinkedHashMap::new,
+                Collectors.toList()
+            ))
+            .entrySet()
+            .stream()
+            .map(entry -> new NutritionDayResponse(
+                entry.getKey(),
+                entry.getValue().stream()
+                    .map(NutritionEntryResponse::calories)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add),
+                entry.getValue()
+            ))
+            .toList();
+    }
+
     public void deleteEntry(UUID userId, UUID entryId) {
         NutritionEntry entry = entryRepository.findByIdAndUserId(entryId, userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         entryRepository.delete(entry);
+    }
+
+    public NutritionEntryResponse updateEntry(UUID userId, UUID entryId, UpdateNutritionEntryRequest request) {
+        NutritionEntry entry = entryRepository.findByIdAndUserId(entryId, userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        applyEntryValues(entry, request.foodName(), request.brandName(), request.fdcId(),
+            request.consumedOn(), request.servings(), request.caloriesPerServing(),
+            request.servingSize(), request.servingSizeUnit());
+        entryRepository.save(entry);
+        return NutritionEntryResponse.from(entry);
+    }
+
+    public void deleteEntriesByDate(UUID userId, LocalDate consumedOn) {
+        LocalDate date = consumedOn != null ? consumedOn : LocalDate.now();
+        List<NutritionEntry> entries = entryRepository.findAllByUserIdAndConsumedOn(userId, date);
+        entryRepository.deleteAll(entries);
     }
 
     private String normalizeQuery(String rawQuery) {
@@ -106,6 +146,10 @@ public class NutritionService {
         }
 
         return normalized;
+    }
+
+    private String searchCacheKey(String query, int page, int size) {
+        return SEARCH_CACHE_VERSION + "|" + query + "|page=" + page + "|size=" + size;
     }
 
     private String writeResults(List<FoodSearchResultResponse> results) {
@@ -131,5 +175,24 @@ public class NutritionService {
 
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void applyEntryValues(NutritionEntry entry,
+                                  String foodName,
+                                  String brandName,
+                                  Long fdcId,
+                                  LocalDate consumedOn,
+                                  BigDecimal servings,
+                                  BigDecimal caloriesPerServing,
+                                  BigDecimal servingSize,
+                                  String servingSizeUnit) {
+        entry.setFoodName(foodName.trim());
+        entry.setBrandName(normalizeOptionalText(brandName));
+        entry.setFdcId(fdcId);
+        entry.setConsumedOn(consumedOn);
+        entry.setServings(servings);
+        entry.setCalories(caloriesPerServing.multiply(servings).setScale(2, RoundingMode.HALF_UP));
+        entry.setServingSize(servingSize);
+        entry.setServingSizeUnit(normalizeOptionalText(servingSizeUnit));
     }
 }

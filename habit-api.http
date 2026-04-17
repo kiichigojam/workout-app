@@ -91,8 +91,16 @@ Authorization: Bearer {{token}}
 DELETE {{baseUrl}}/habits/{{habitId}}/checkins/2026-03-14
 Authorization: Bearer {{token}}
 
+### Group workouts by day
+GET {{baseUrl}}/habits/checkins/grouped?days=7
+Authorization: Bearer {{token}}
+
 ### Nutrition search
 GET {{baseUrl}}/nutrition/search?q={{nutritionQuery}}
+Authorization: Bearer {{token}}
+
+### Nutrition search page 2
+GET {{baseUrl}}/nutrition/search?q={{nutritionQuery}}&page=2&size=10
 Authorization: Bearer {{token}}
 
 ### Nutrition search again to hit cache
@@ -157,6 +165,10 @@ Content-Type: application/json
 
 ### List nutrition entries for a date
 GET {{baseUrl}}/nutrition/entries?date=2026-04-15
+Authorization: Bearer {{token}}
+
+### Group nutrition entries by day
+GET {{baseUrl}}/nutrition/entries/grouped?days=7
 Authorization: Bearer {{token}}
 
 ### Delete nutrition entry

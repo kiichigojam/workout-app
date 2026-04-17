@@ -220,6 +220,28 @@ pre {
   margin-bottom: 16px;
 }
 
+.group-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.group-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(26, 44, 54, 0.04);
+}
+
+.group-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 @media (max-width: 920px) {
   .hero,
   .form-grid,

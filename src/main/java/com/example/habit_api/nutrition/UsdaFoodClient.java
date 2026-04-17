@@ -1,6 +1,7 @@
 package com.example.habit_api.nutrition;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 public class UsdaFoodClient {
     private static final List<String> DEFAULT_DATA_TYPES = List.of("Foundation", "SR Legacy", "Branded");
+    private static final BigDecimal KJ_PER_KCAL = new BigDecimal("4.184");
 
     private final RestClient restClient;
     private final String apiKey;
@@ -27,7 +29,7 @@ public class UsdaFoodClient {
         this.apiKey = apiKey;
     }
 
-    public List<FoodSearchResultResponse> searchFoods(String query) {
+    public List<FoodSearchResultResponse> searchFoods(String query, int page, int size) {
         if (!StringUtils.hasText(apiKey)) {
             throw new ResponseStatusException(
                 HttpStatus.SERVICE_UNAVAILABLE,
@@ -41,7 +43,7 @@ public class UsdaFoodClient {
                     .path("/foods/search")
                     .queryParam("api_key", apiKey)
                     .build())
-                .body(new UsdaSearchRequest(query, 10, 1, DEFAULT_DATA_TYPES))
+                .body(new UsdaSearchRequest(query, size, page, DEFAULT_DATA_TYPES))
                 .retrieve()
                 .body(UsdaSearchResponse.class);
 
@@ -52,8 +54,8 @@ public class UsdaFoodClient {
             return response.foods().stream()
                 .map(this::toSearchResult)
                 .sorted(Comparator
-                    .comparing(UsdaFoodClient::hasServingData).reversed()
-                    .thenComparing(UsdaFoodClient::hasBrandData).reversed())
+                    .comparing((FoodSearchResultResponse result) -> hasServingData(result)).reversed()
+                    .thenComparing(result -> hasBrandData(result), Comparator.reverseOrder()))
                 .toList();
         } catch (RestClientResponseException ex) {
             throw new ResponseStatusException(
@@ -71,16 +73,16 @@ public class UsdaFoodClient {
     }
 
     private FoodSearchResultResponse toSearchResult(UsdaFood food) {
-        boolean hasServingData = hasServingData(food);
+        boolean usePer100gFallback = isSrLegacyWithoutServingData(food);
         return new FoodSearchResultResponse(
             food.fdcId(),
             food.description(),
             firstNonBlank(food.brandName(), food.brandOwner()),
             food.dataType(),
             extractCalories(food.foodNutrients()),
-            hasServingData ? food.servingSize() : new BigDecimal("100"),
-            hasServingData ? food.servingSizeUnit() : "g",
-            hasServingData ? "per_serving" : "per_100g"
+            usePer100gFallback ? new BigDecimal("100") : food.servingSize(),
+            usePer100gFallback ? "g" : food.servingSizeUnit(),
+            usePer100gFallback ? "per_100g" : "per_serving"
         );
     }
 
@@ -91,9 +93,9 @@ public class UsdaFoodClient {
 
         return nutrients.stream()
             .filter(nutrient -> nutrient != null && nutrient.value() != null)
-            .filter(nutrient -> "1008".equals(nutrient.nutrientNumber())
-                || "Energy".equalsIgnoreCase(nutrient.nutrientName()))
-            .map(UsdaFoodNutrient::value)
+            .filter(this::isEnergyNutrient)
+            .sorted(Comparator.comparing((UsdaFoodNutrient nutrient) -> isKcalNutrient(nutrient)).reversed())
+            .map(this::toKcal)
             .findFirst()
             .orElse(null);
     }
@@ -113,8 +115,30 @@ public class UsdaFoodClient {
         return food.servingSize() != null && StringUtils.hasText(food.servingSizeUnit());
     }
 
+    private boolean isSrLegacyWithoutServingData(UsdaFood food) {
+        return "SR Legacy".equalsIgnoreCase(food.dataType()) && !hasServingData(food);
+    }
+
     private static boolean hasBrandData(FoodSearchResultResponse result) {
         return StringUtils.hasText(result.brandName());
+    }
+
+    private boolean isEnergyNutrient(UsdaFoodNutrient nutrient) {
+        return "1008".equals(nutrient.nutrientNumber())
+            || "1062".equals(nutrient.nutrientNumber())
+            || "Energy".equalsIgnoreCase(nutrient.nutrientName());
+    }
+
+    private boolean isKcalNutrient(UsdaFoodNutrient nutrient) {
+        return "1008".equals(nutrient.nutrientNumber())
+            || "kcal".equalsIgnoreCase(nutrient.unitName());
+    }
+
+    private BigDecimal toKcal(UsdaFoodNutrient nutrient) {
+        if ("kJ".equalsIgnoreCase(nutrient.unitName())) {
+            return nutrient.value().divide(KJ_PER_KCAL, 2, RoundingMode.HALF_UP);
+        }
+        return nutrient.value();
     }
 
     private record UsdaSearchRequest(
@@ -140,6 +164,7 @@ public class UsdaFoodClient {
     private record UsdaFoodNutrient(
         String nutrientName,
         String nutrientNumber,
+        String unitName,
         BigDecimal value
     ) {}
 }
